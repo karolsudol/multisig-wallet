@@ -30,6 +30,8 @@ interface IMultiSigWallet {
 }
 
 contract MultiSigWallet {
+    /* ======================= EVENTS ======================= */
+
     event Deposit(address indexed sender, uint amount, uint balance);
     event SubmitTransaction(
         address indexed owner,
@@ -41,6 +43,8 @@ contract MultiSigWallet {
     event ConfirmTransaction(address indexed owner, uint indexed txIndex);
     event RevokeConfirmation(address indexed owner, uint indexed txIndex);
     event ExecuteTransaction(address indexed owner, uint indexed txIndex);
+
+    /* ======================= STATE VARS ======================= */
 
     address[] public owners;
     mapping(address => bool) public isOwner;
@@ -58,6 +62,8 @@ contract MultiSigWallet {
     mapping(uint => mapping(address => bool)) public isConfirmed;
 
     Transaction[] public transactions;
+
+    /* ======================= MODIFIERS ======================= */
 
     modifier onlyOwner() {
         require(isOwner[msg.sender], "not owner");
@@ -79,6 +85,8 @@ contract MultiSigWallet {
         _;
     }
 
+    /* ======================= CONSTRUCTOR ======================= */
+
     constructor(address[] memory _owners, uint _numConfirmationsRequired) {
         require(_owners.length > 0, "owners required");
         require(
@@ -99,6 +107,8 @@ contract MultiSigWallet {
 
         numConfirmationsRequired = _numConfirmationsRequired;
     }
+
+    /* ======================= EXTERNAL FUNCTIONS ======================= */
 
     receive() external payable {
         emit Deposit(msg.sender, msg.value, address(this).balance);
