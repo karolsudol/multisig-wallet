@@ -117,7 +117,7 @@ contract MultiSigWallet {
     function submitTransaction(
         address _to,
         uint _value,
-        bytes memory _data
+        bytes calldata _data
     ) public onlyOwner {
         uint txIndex = transactions.length;
 
