@@ -1,9 +1,20 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.17;
 
-interface IMultiSigWallet {
+/**
+ * Write a multisig wallet contract. Specify the owners (save to mapping), const minQuorum
+
+Functions to be implemented:
+
+propose(address, calldata) - can be sent only by one of the owners
+confirm(uint id) - confirms a particular proposed transaction
+executeTransaction(uint id) - gets calldata, checks minimum number of approvals
+add/remove/changeQuorum - these function should be called by the contract itself
+ */
+
+interface MultiSigWalletNew {
     // owners_ - initial owners
-    // constructor(address[] memory owners_) { }
+    // constructor(address[] memory owners_);
 
     /**
      * @notice Execute a multi-signature transaction.
