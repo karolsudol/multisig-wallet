@@ -90,18 +90,39 @@ describe("MultiSigWallet", () => {
   });
 
   describe("update owners ", async function () {
-    it("should revert for non-owner correctly", async () => {
+    it.only("should revoke adding owner correctly", async () => {
       const { multiSigWallet, signers } = await loadFixture(deploy);
+
       await expect(
-        multiSigWallet.connect(signers[3]).confirmTransaction(0)
-      ).to.be.revertedWith("not owner");
+        multiSigWallet.connect(signers[3]).addOwner(signers[3].getAddress())
+      ).to.be.revertedWith("only wallet");
+
+      await expect(
+        multiSigWallet.addOwner(signers[4].getAddress())
+      ).to.be.revertedWith("only wallet");
+
+      // await expect(
+      //   multiSigWallet.addOwner(signers[3].getAddress())
+      // ).to.be.revertedWith("only wallet");
+
+      // await expect(
+      //   await multiSigWallet.addOwner(signers[0].getAddress())
+      // ).to.be.revertedWith("only wallet");
+    });
+    it.only("should add owner correctly", async () => {
+      const { multiSigWallet, signers } = await loadFixture(deploy);
+
+      expect((await multiSigWallet.getOwners()).length).equal(3);
+
+      // await expect(multiSigWallet.addOwner(signers[3].getAddress()))
+      //   .to.emit(multiSigWallet, "OwnerAddition")
+      //   .withArgs(await signers[3].getAddress());
+
+      // expect((await multiSigWallet.getOwners()).length).equal(4);
     });
 
-    it("should revert for idx out of bounds correctl;y", async () => {
+    it("should remove owner correctly", async () => {
       const { multiSigWallet, signers } = await loadFixture(deploy);
-      await expect(
-        multiSigWallet.connect(signers[0]).confirmTransaction(1)
-      ).to.be.revertedWith("tx does not exist");
     });
   });
 

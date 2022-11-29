@@ -103,31 +103,32 @@ contract MultiSigWallet {
     }
 
     modifier ownerDoesNotExist(address owner) {
-        require(!isOwner[owner]);
+        require(!isOwner[owner], "owner does not exist");
         _;
     }
 
     modifier ownerExists(address owner) {
-        require(isOwner[owner]);
+        require(isOwner[owner], "owner exists");
         _;
     }
 
     modifier onlyWallet() {
-        require(msg.sender == address(this));
+        require(msg.sender == address(this), "only wallet");
         _;
     }
 
     modifier validAddress(address _addr) {
-        require(_addr != address(0), "Not valid address");
+        require(_addr != address(0), "invalid address");
         _;
     }
 
-    modifier validRequirement(uint ownerCount, uint _required) {
+    modifier validQuorum(uint ownerCount, uint _quorum) {
         require(
             ownerCount <= MAX_OWNER_COUNT &&
-                _required <= ownerCount &&
-                _required != 0 &&
-                ownerCount != 0
+                _quorum <= ownerCount &&
+                _quorum != 0 &&
+                ownerCount != 0,
+            "invalid quorum"
         );
         _;
     }
@@ -195,7 +196,7 @@ contract MultiSigWallet {
         onlyWallet
         ownerDoesNotExist(owner)
         validAddress(owner)
-        validRequirement(owners.length + 1, quorum)
+        validQuorum(owners.length + 1, quorum)
     {
         isOwner[owner] = true;
         owners.push(owner);
@@ -320,7 +321,7 @@ contract MultiSigWallet {
     function changeQuorum(uint _quorum)
         public
         onlyWallet
-        validRequirement(owners.length, _quorum)
+        validQuorum(owners.length, _quorum)
     {
         quorum = _quorum;
         emit QuorumChange(_quorum);
