@@ -59,7 +59,7 @@ contract MultiSigWallet {
 
     address[] public owners;
     mapping(address => bool) public isOwner;
-    uint public numConfirmationsRequired;
+    uint public quorum;
 
     struct Transaction {
         address to;
@@ -98,11 +98,10 @@ contract MultiSigWallet {
 
     /* ======================= CONSTRUCTOR ======================= */
 
-    constructor(address[] memory _owners, uint _numConfirmationsRequired) {
+    constructor(address[] memory _owners, uint _quorum) {
         require(_owners.length > 0, "owners required");
         require(
-            _numConfirmationsRequired > 0 &&
-                _numConfirmationsRequired <= _owners.length,
+            _quorum > 0 && _quorum <= _owners.length,
             "invalid number of required confirmations"
         );
 
@@ -116,7 +115,7 @@ contract MultiSigWallet {
             owners.push(owner);
         }
 
-        numConfirmationsRequired = _numConfirmationsRequired;
+        quorum = _quorum;
     }
 
     /* ======================= VIEW FUNCTIONS ======================= */
@@ -200,7 +199,7 @@ contract MultiSigWallet {
         Transaction storage transaction = transactions[_txIndex];
 
         require(
-            transaction.numConfirmations >= numConfirmationsRequired,
+            transaction.numConfirmations >= quorum,
             "not enough confirmation to execute"
         );
 
