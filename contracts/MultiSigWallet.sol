@@ -12,7 +12,7 @@ executeTransaction(uint id) - gets calldata, checks minimum number of approvals
 add/remove/changeQuorum - these function should be called by the contract itself
  */
 
-interface MultiSigWalletNew {
+interface IMultiSigWallet {
     // owners_ - initial owners
     // constructor(address[] memory owners_);
 
@@ -37,7 +37,6 @@ interface MultiSigWalletNew {
      * @param _isAdded If true, a new signer will be added, otherwise, remove.
      */
     function updateOwner(address _owner, bool _isAdded) external;
-    // use trick: require(address(this) == msg.sender)
 }
 
 contract MultiSigWallet {
@@ -54,6 +53,13 @@ contract MultiSigWallet {
     event ConfirmTransaction(address indexed owner, uint indexed txIndex);
     event RevokeConfirmation(address indexed owner, uint indexed txIndex);
     event ExecuteTransaction(address indexed owner, uint indexed txIndex);
+    event OwnerAddition(address indexed owner);
+    event OwnerRemoval(address indexed owner);
+    event QuorumChange(uint quorum);
+
+    /* ======================= CONSTANTS ======================= */
+
+    uint public constant MAX_OWNER_COUNT = 10;
 
     /* ======================= STATE VARS ======================= */
 
@@ -93,6 +99,36 @@ contract MultiSigWallet {
 
     modifier notConfirmed(uint _txIndex) {
         require(!isConfirmed[_txIndex][msg.sender], "tx already confirmed");
+        _;
+    }
+
+    modifier ownerDoesNotExist(address owner) {
+        require(!isOwner[owner]);
+        _;
+    }
+
+    modifier ownerExists(address owner) {
+        require(isOwner[owner]);
+        _;
+    }
+
+    modifier onlyWallet() {
+        require(msg.sender == address(this));
+        _;
+    }
+
+    modifier validAddress(address _addr) {
+        require(_addr != address(0), "Not valid address");
+        _;
+    }
+
+    modifier validRequirement(uint ownerCount, uint _required) {
+        require(
+            ownerCount <= MAX_OWNER_COUNT &&
+                _required <= ownerCount &&
+                _required != 0 &&
+                ownerCount != 0
+        );
         _;
     }
 
@@ -148,6 +184,56 @@ contract MultiSigWallet {
             transaction.executed,
             transaction.numConfirmations
         );
+    }
+
+    /* ======================= UPDATE OWNER FUNCTIONS ======================= */
+
+    /// @dev Allows to add a new owner. Transaction has to be sent by wallet.
+    /// @param owner Address of new owner.
+    function addOwner(address owner)
+        public
+        onlyWallet
+        ownerDoesNotExist(owner)
+        validAddress(owner)
+        validRequirement(owners.length + 1, quorum)
+    {
+        isOwner[owner] = true;
+        owners.push(owner);
+        emit OwnerAddition(owner);
+    }
+
+    /// @dev Allows to remove an owner. Transaction has to be sent by wallet.
+    /// @param owner Address of owner.
+    function removeOwner(address owner) public onlyWallet ownerExists(owner) {
+        isOwner[owner] = false;
+        for (uint i = 0; i < owners.length - 1; i++)
+            if (owners[i] == owner) {
+                owners[i] = owners[owners.length - 1];
+                break;
+            }
+
+        if (quorum > owners.length) changeQuorum(owners.length);
+        emit OwnerRemoval(owner);
+    }
+
+    /// @dev Allows to replace an owner with a new owner. Transaction has to be sent by wallet.
+    /// @param owner Address of owner to be replaced.
+    /// @param newOwner Address of new owner.
+    function replaceOwner(address owner, address newOwner)
+        public
+        onlyWallet
+        ownerExists(owner)
+        ownerDoesNotExist(newOwner)
+    {
+        for (uint i = 0; i < owners.length; i++)
+            if (owners[i] == owner) {
+                owners[i] = newOwner;
+                break;
+            }
+        isOwner[owner] = false;
+        isOwner[newOwner] = true;
+        emit OwnerRemoval(owner);
+        emit OwnerAddition(newOwner);
     }
 
     /* ======================= EXTERNAL FUNCTIONS ======================= */
@@ -227,5 +313,16 @@ contract MultiSigWallet {
         isConfirmed[_txIndex][msg.sender] = false;
 
         emit RevokeConfirmation(msg.sender, _txIndex);
+    }
+
+    /// @dev Allows to change the number of required confirmations. Transaction has to be sent by wallet.
+    /// @param _quorum Number of required confirmations.
+    function changeQuorum(uint _quorum)
+        public
+        onlyWallet
+        validRequirement(owners.length, _quorum)
+    {
+        quorum = _quorum;
+        emit QuorumChange(_quorum);
     }
 }

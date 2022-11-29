@@ -89,7 +89,7 @@ describe("MultiSigWallet", () => {
     });
   });
 
-  describe("confirm transaction", async function () {
+  describe("update owners ", async function () {
     it("should revert for non-owner correctly", async () => {
       const { multiSigWallet, signers } = await loadFixture(deploy);
       await expect(
@@ -102,87 +102,6 @@ describe("MultiSigWallet", () => {
       await expect(
         multiSigWallet.connect(signers[0]).confirmTransaction(1)
       ).to.be.revertedWith("tx does not exist");
-    });
-
-    it("should revert if tx has been confirmed correctly", async () => {
-      const { multiSigWallet, signers } = await loadFixture(deploy);
-
-      await multiSigWallet
-        .connect(signers[0])
-        .submitTransaction(
-          await signers[3].getAddress(),
-          ethers.utils.parseEther("10"),
-          "0x00"
-        );
-
-      await signers[0].sendTransaction({
-        to: multiSigWallet.address,
-        value: ethers.utils.parseEther("10"),
-      });
-
-      await multiSigWallet.connect(signers[0]).confirmTransaction(0);
-
-      await expect(
-        multiSigWallet.connect(signers[0]).confirmTransaction(0)
-      ).to.be.revertedWith("tx already confirmed");
-    });
-
-    it("should revert if tx executed correctly", async () => {
-      const { multiSigWallet, signers } = await loadFixture(deploy);
-
-      await multiSigWallet
-        .connect(signers[0])
-        .submitTransaction(
-          await signers[3].getAddress(),
-          ethers.utils.parseEther("10"),
-          "0x00"
-        );
-
-      await signers[0].sendTransaction({
-        to: multiSigWallet.address,
-        value: ethers.utils.parseEther("10"),
-      });
-
-      for (let i of [0, 1]) {
-        const tx = await multiSigWallet
-          .connect(signers[i])
-          .confirmTransaction(0);
-        await tx.wait();
-      }
-      await multiSigWallet.connect(signers[0]).executeTransaction(0);
-
-      await expect(
-        multiSigWallet.connect(signers[2]).confirmTransaction(0)
-      ).to.be.revertedWith("tx already executed");
-    });
-
-    it("should confirm tx correctly", async () => {
-      const { multiSigWallet, signers } = await loadFixture(deploy);
-
-      await multiSigWallet
-        .connect(signers[0])
-        .submitTransaction(
-          await signers[3].getAddress(),
-          ethers.utils.parseEther("10"),
-          "0x00"
-        );
-
-      await signers[0].sendTransaction({
-        to: multiSigWallet.address,
-        value: ethers.utils.parseEther("10"),
-      });
-
-      const tx = await multiSigWallet.connect(signers[0]).confirmTransaction(0);
-      await tx.wait();
-
-      const transaction = await multiSigWallet.getTransaction(0);
-      expect(transaction.numConfirmations).to.equal(1);
-      expect(await multiSigWallet.isConfirmed(0, await signers[0].getAddress()))
-        .to.be.true;
-
-      await expect(tx)
-        .to.emit(multiSigWallet, "ConfirmTransaction")
-        .withArgs(await signers[0].getAddress(), 0);
     });
   });
 
