@@ -18,7 +18,6 @@ describe("MultiSigWallet", () => {
     [owner, addr1, addr2, addr3, addr4] = await ethers.getSigners();
     const MultiSigWallet = await ethers.getContractFactory("MultiSigWallet");
     const quorum = 2;
-    // const web3 = MultiSigWallet.web3;
 
     multiSigWallet = await MultiSigWallet.deploy(
       [addr1.address, addr2.address, addr3.address],
@@ -95,34 +94,29 @@ describe("MultiSigWallet", () => {
   describe("update owners ", async function () {
     it("should revoke adding owner", async () => {
       await expect(
-        multiSigWallet.connect(addr4).addOwner(addr4.getAddress())
+        multiSigWallet.connect(addr1).addOwner(addr4.address)
       ).to.be.revertedWith("only wallet");
+    });
+    it("should revoke removing owner", async () => {
+      await expect(
+        multiSigWallet.connect(addr4).removeOwner(addr4.address)
+      ).to.be.revertedWith("only wallet");
+    });
 
-      // await expect(
-      //   multiSigWallet
-      //     .connect(multiSigWallet.address)
-      //     .addOwner(signers[4].getAddress())
-      // ).to.be.revertedWith("only wallet");
-
-      // await expect(
-      //   multiSigWallet.addOwner(signers[3].getAddress())
-      // ).to.be.revertedWith("only wallet");
-
-      // await expect(
-      //   await multiSigWallet.addOwner(signers[0].getAddress())
-      // ).to.be.revertedWith("only wallet");
+    it("should revoke replacing owner", async () => {
+      await expect(
+        multiSigWallet.connect(addr4).replaceOwner(addr1.address, addr4.address)
+      ).to.be.revertedWith("only wallet");
     });
     it("should add owner", async () => {
       expect((await multiSigWallet.getOwners()).length).equal(3);
 
-      // await expect(multiSigWallet.addOwner(signers[3].getAddress()))
+      // await expect(multiSigWallet.addOwner(addr4.address))
       //   .to.emit(multiSigWallet, "OwnerAddition")
-      //   .withArgs(await signers[3].getAddress());
+      //   .withArgs(await addr4.getAddress());
 
       // expect((await multiSigWallet.getOwners()).length).equal(4);
     });
-
-    it("should remove owner", async () => {});
   });
 
   describe("revoke tx confirmations", async function () {
