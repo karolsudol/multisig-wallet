@@ -1,13 +1,26 @@
-# Sample Hardhat Project
+# MULTISIGNATURE WALLET
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+- `propose(address, calldata)` - can be sent only by one of the owners
+- `confirm(uint id)` - confirms a particular proposed transaction
+- `executeTransaction(uint id`) - gets calldata, checks minimum number of approvals
+- `add/remove/changeQuorum` - these function should be called by the contract itself
 
-Try running some of the following tasks:
+- `MultiSigWallet` Deployed and Verified on [goerli]()
 
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.ts
-```
+- with [owner]()
+
+## hardhat tasks:
+
+- `npm install hardhat`
+- `npx hardhat coverage`
+- `npx hardhat run --network goerli scripts/deployMultiSigWallet.ts`
+- `npx hardhat verify --network goerli xx "xx" "xx"`
+
+## coverage
+
+<br/>
+<p align="center">
+<img src="img/coverage.png">
+</a>
+</p>
+<br/>
